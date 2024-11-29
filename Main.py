@@ -154,6 +154,6 @@ elif selected_menu == 'Reset':
 elif selected_menu == 'Ergebnisse':
     import pages.Ergebnisse as Ergebnisse_page
     Ergebnisse_page.display_page()
-elif selected_menu == 'Material Extraction':
-    import pages.KI_AZURE as KIAZURE_page
-    Ergebnisse_page.display_page()
+elif selected_menu == 'Materialextraction':
+    import pages.Materailextraction as Materialextraction_page
+    Materialextraction_page.display_page()
