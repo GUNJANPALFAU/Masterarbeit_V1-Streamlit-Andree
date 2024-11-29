@@ -1,0 +1,89 @@
+import os
+import requests
+from azure.ai.formrecognizer import FormRecognizerClient
+from azure.core.credentials import AzureKeyCredential
+
+# Function to read the invoice document (can be an image or PDF)
+def read_invoice(file_path):
+    if os.path.exists(file_path):
+        return file_path
+    else:
+        print(f"File not found: {file_path}")
+        return None
+
+# Function to extract data from the invoice using Azure Form Recognizer
+def extract_invoice_data(api_key, endpoint, file_path):
+    # Instantiate the Form Recognizer client
+    credential = AzureKeyCredential(api_key)
+    form_recognizer_client = FormRecognizerClient(endpoint, credential)
+
+    # Read the invoice document
+    with open(file_path, "rb") as f:
+        # Call the pre-built invoice model to analyze the document
+        poller = form_recognizer_client.begin_recognize_invoices(invoice=f)
+        result = poller.result()
+
+    return result
+
+# Function to parse and extract material and quantity/amount from the result
+def parse_invoice_result(result):
+    extracted_data = []
+
+    # Iterate through the invoices detected
+    for invoice in result:
+        # Extracting line items
+        for line_item in invoice.items:
+            material_name = None
+            quantity = None
+            amount = None
+            
+            # Extracting material (item name), quantity, and amount from the line items
+            for field in line_item.fields:
+                if "item" in field.name.lower():
+                    material_name = line_item.fields[field.name].value
+                if "quantity" in field.name.lower():
+                    quantity = line_item.fields[field.name].value
+                if "amount" in field.name.lower():
+                    amount = line_item.fields[field.name].value
+            
+            # Store the material and its quantity and amount
+            if material_name and quantity and amount:
+                extracted_data.append({
+                    "material": material_name,
+                    "quantity": quantity,
+                    "amount": amount
+                })
+    
+    return extracted_data
+
+# Main function to tie everything together
+def main():
+    # Azure Form Recognizer details
+    api_key = "DNjmy8Ljo0XverRQ9e1a9vu104RcZ5mAegO0B3jwN7PxFKY6mkblJQQJ99AKACPV0roXJ3w3AAALACOGE42s"
+    endpoint = "https://sustainability-fau.cognitiveservices.azure.com/"
+
+    # Specify the file path to your invoice (image/PDF)
+    file_path = "invoice.pdf"  # Replace with your document file path
+    
+    # Step 1: Read the invoice document
+    document = read_invoice(file_path)
+    if document:
+        # Step 2: Extract data using Azure Form Recognizer
+        result = extract_invoice_data(api_key, endpoint, document)
+        
+        # Step 3: Parse and extract materials, quantities, and amounts
+        extracted_data = parse_invoice_result(result)
+        
+        # Step 4: Print the extracted data
+        if extracted_data:
+            for data in extracted_data:
+                print(f"Material: {data['material']}")
+                print(f"Quantity: {data['quantity']}")
+                print(f"Amount: {data['amount']}")
+        else:
+            print("No relevant data found in the invoice.")
+    else:
+        print("Invoice document not found or invalid path.")
+
+if __name__ == "__main__":
+    main()
