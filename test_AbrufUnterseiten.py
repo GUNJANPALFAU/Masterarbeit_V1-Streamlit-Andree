@@ -12,6 +12,7 @@ from unittest import mock
     ('Mindestangabepflicht', 'pages.Mindestangabepflicht'),
     ('Reset', 'pages.Reset'),
     ('Ergebnisse', 'pages.Ergebnisse')
+    ('Materialextraction', 'pages.Materialextraction')
 ])
 def test_load_selected_page(selected_menu, page_module_name):
     # Mocken des Modulimports
