@@ -45,8 +45,8 @@ def analyze_invoice(document):
 
 def display_page():
     """Streamlit page for invoice extraction"""
-    st.title("Material Extraction - AI Page")
-    st.write("This page displays the invoice extraction details.")
+    st.title("Data extraction")
+    st.write(" Information from the invoice/bills.")
     
     # File upload widget
     uploaded_file = st.file_uploader("Upload an invoice PDF", type=["pdf"])
@@ -57,7 +57,7 @@ def display_page():
 
         # Display extracted data in a table format
         if invoice_data:
-            st.subheader("Extracted Invoice Data")
+            st.subheader("Extracted  Data")
             invoice_df = pd.DataFrame(invoice_data)
             st.dataframe(invoice_df)  # Display the invoice data in a table
         else:
