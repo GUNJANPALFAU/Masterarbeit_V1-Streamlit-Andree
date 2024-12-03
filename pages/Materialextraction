@@ -4,32 +4,78 @@ import pickle
 import os
 
 
-# Function to create the page layout
-def create_page():
-    # Heading of the page
-    st.title("AI integrated Material Data from invoice")  # Main Heading
+def refresh_session_state():
+    st.session_state["refreshed"] = True
+
+# Function to handle the file upload
+def invoice_upload():
+    uploaded_file = st.file_uploader("Upload an Invoice (PDF, Excel, or CSV)", type=["pdf", "xlsx", "csv"])
+    if uploaded_file:
+        # You can add logic here to process the file (like parsing CSV or Excel files)
+        file_name = uploaded_file.name
+        file_extension = file_name.split('.')[-1].lower()
+        st.write(f"File '{file_name}' uploaded successfully!")
+        
+        # Process file based on extension type
+        if file_extension == "pdf":
+            st.write("This is a PDF file. You can implement logic to parse or display PDF contents here.")
+        elif file_extension in ["xlsx", "csv"]:
+            if file_extension == "xlsx":
+                df = pd.read_excel(uploaded_file)
+            else:
+                df = pd.read_csv(uploaded_file)
+            
+            st.write(f"Displaying the content of the file '{file_name}':")
+            st.dataframe(df)  # Display the content of the file
+
+# Function to display the sidebar content (for example, uploaded file list)
+def display_sidebar_items():
+    if "uploaded_files" not in st.session_state:
+        st.session_state["uploaded_files"] = []
     
-    # Subtext for the page
-    st.subheader("Please upload your invoice in PDF  format.")  # Subheading
+    # Display the list of uploaded files
+    if st.session_state["uploaded_files"]:
+        st.sidebar.write("Uploaded Files:")
+        for file in st.session_state["uploaded_files"]:
+            st.sidebar.write(f"- {file}")
+    else:
+        st.sidebar.write("No files uploaded yet.")
 
-    # Upload button for the user to upload a file
-    uploaded_file = st.file_uploader("Choose a file", type=["pdf", "jpg", "jpeg", "png"])  # Upload Button
+# Function to create the display page
+def display_page():
+    # Create two columns for the layout
+    col1, col2 = st.columns([3, 1.3])
+    
+    with col1:
+        st.header("Invoice Upload and Management")  # Set the main header of the page
+    with col2:
+        container = st.container(border=True)
+        with container:
+            st.write("Files uploaded:")  # Add some simple info for uploaded files in the container
+    
+    # Add page description
+    st.markdown("""
+        On this page, you can upload invoices in PDF, Excel, or CSV format. 
+        Once uploaded, the file contents will be displayed below. 
+        You can also view an overview of all uploaded invoices in the sidebar.
+    """)
+    
+    # Create tabs for the file upload and the overview of uploaded invoices
+    tab1, tab2 = st.tabs(["Upload Invoice", "Invoice Overview"])
+    
+    with tab1:
+        invoice_upload()  # Handle the invoice upload functionality
+        display_sidebar_items()  # Display the uploaded files in the sidebar
+    
+    with tab2:
+        st.write("Here you can view an overview of the invoices you've uploaded.")
+        # Display all uploaded files (example data)
+        if "uploaded_files" in st.session_state:
+            st.write(st.session_state["uploaded_files"])
 
-    # Handle the file upload
-    if uploaded_file is not None:
-        # Display file details (just an example, you can handle it differently)
-        st.write("File uploaded successfully!")
-        st.write(f"File name: {uploaded_file.name}")
-        
-        # You can also read and process the file here
-        # For example, if it's a PDF, you can extract text from it or show a preview
-        if uploaded_file.type == "application/pdf":
-            st.text("PDF file uploaded. You can process it further here.")
-        elif uploaded_file.type in ["image/jpeg", "image/png"]:
-            st.image(uploaded_file, caption="Uploaded Image", use_column_width=True)
-        
-# Call the function to display the page
-create_page()
+    # Refresh session state to make sure all data is up-to-date
+    refresh_session_state()
 
-
+# Call the display_page function to render the page
+display_page()
 
