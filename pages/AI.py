@@ -57,10 +57,13 @@ def analyze_invoice(document):
             continue
 
         # Ensure 'amount' is a valid number before adding to data
-        try:
-            amount = float(amount.replace(",", "").replace("$", ""))  # Clean and convert amount to float
-        except ValueError:
-            amount = None  # If invalid, set as None
+        if amount:  # Check if amount is not empty or None
+            try:
+                amount = float(amount.replace(",", "").replace("$", ""))  # Clean and convert amount to float
+            except ValueError:
+                amount = None  # If invalid, set as None
+        else:
+            amount = None  # If amount is empty or None, set as None
 
         # Filter out rows where all fields are empty
         if description or quantity or amount:
