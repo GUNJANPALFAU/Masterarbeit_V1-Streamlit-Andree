@@ -4,8 +4,6 @@ import pickle
 import os
 
 
-def refresh_session_state():
-    st.session_state["refreshed"] = True
 
 # Function to handle the file upload
 def invoice_upload():
