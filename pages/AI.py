@@ -12,6 +12,23 @@ key = "DNjmy8Ljo0XverRQ9e1a9vu104RcZ5mAegO0B3jwN7PxFKY6mkblJQQJ99AKACPV0roXJ3w3A
 # Initialize the client
 client = DocumentAnalysisClient(endpoint=endpoint, credential=AzureKeyCredential(key))
 
+
+SESSION_STATE_PATH = "session_state.pkl"
+
+def load_session_state():
+    """Load session state from a Pickle file."""
+    try:
+        with open(SESSION_STATE_PATH, "rb") as f:
+            return pickle.load(f)
+    except FileNotFoundError:
+        return {}
+
+def save_session_state(state):
+    """Save session state to a Pickle file."""
+    with open(SESSION_STATE_PATH, "wb") as f:
+        pickle.dump(state, f)
+
+
 def analyze_invoice(document): 
     """Analyze the invoice document and extract relevant information"""
     poller = client.begin_analyze_document("prebuilt-invoice", document)
@@ -53,18 +70,7 @@ def analyze_invoice(document):
 
     return invoice_data
 
-def load_session_state():
-    """Load session state from a Pickle file."""
-    try:
-        with open(SESSION_STATE_PATH, "rb") as f:
-            return pickle.load(f)
-    except FileNotFoundError:
-        return {}
 
-def save_session_state(state):
-    """Save session state to a Pickle file."""
-    with open(SESSION_STATE_PATH, "wb") as f:
-        pickle.dump(state, f)
 
 def display_page():
     """Streamlit page for invoice extraction"""
