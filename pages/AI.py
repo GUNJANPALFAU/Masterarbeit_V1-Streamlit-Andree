@@ -11,8 +11,6 @@ key = "DNjmy8Ljo0XverRQ9e1a9vu104RcZ5mAegO0B3jwN7PxFKY6mkblJQQJ99AKACPV0roXJ3w3A
 
 # Initialize the client
 client = DocumentAnalysisClient(endpoint=endpoint, credential=AzureKeyCredential(key))
-poller = client.begin_analyze_document("prebuilt-invoice", uploaded_file)
-result = poller.result()
 
 SESSION_STATE_PATH = "session_state.pkl"
 
@@ -28,7 +26,6 @@ def save_session_state(state):
     """Save session state to a Pickle file."""
     with open(SESSION_STATE_PATH, "wb") as f:
         pickle.dump(state, f)
-
 
 def analyze_invoice(document): 
     """Analyze the invoice document and extract relevant information"""
@@ -71,8 +68,6 @@ def analyze_invoice(document):
 
     return invoice_data
 
-
-
 def display_page():
     """Streamlit page for invoice extraction"""
     st.title("Data extraction")
@@ -94,3 +89,8 @@ def display_page():
             st.write("No relevant invoice data found.")
     else:
         st.write("Please upload a PDF invoice file for analysis.")
+
+    # Example of saving session state after analyzing
+    session_state = load_session_state()
+    session_state['last_uploaded_file'] = uploaded_file.name if uploaded_file else None
+    save_session_state(session_state)
