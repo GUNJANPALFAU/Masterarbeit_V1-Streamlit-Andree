@@ -3,6 +3,35 @@ import pandas as pd
 import pickle
 import os
 
+
+# Function to create the page layout
+def create_page():
+    # Heading of the page
+    st.title("AI integrated Material Data from invoice")  # Main Heading
+    
+    # Subtext for the page
+    st.subheader("Please upload your invoice in PDF  format.")  # Subheading
+
+    # Upload button for the user to upload a file
+    uploaded_file = st.file_uploader("Choose a file", type=["pdf", "jpg", "jpeg", "png"])  # Upload Button
+
+    # Handle the file upload
+    if uploaded_file is not None:
+        # Display file details (just an example, you can handle it differently)
+        st.write("File uploaded successfully!")
+        st.write(f"File name: {uploaded_file.name}")
+        
+        # You can also read and process the file here
+        # For example, if it's a PDF, you can extract text from it or show a preview
+        if uploaded_file.type == "application/pdf":
+            st.text("PDF file uploaded. You can process it further here.")
+        elif uploaded_file.type in ["image/jpeg", "image/png"]:
+            st.image(uploaded_file, caption="Uploaded Image", use_column_width=True)
+        
+# Call the function to display the page
+create_page()
+
+
 from azure.ai.formrecognizer import DocumentAnalysisClient
 from azure.core.credentials import AzureKeyCredential
 
