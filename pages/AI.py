@@ -70,26 +70,17 @@ def display_page():
     st.title("Data extraction")
     st.write("Information from the invoice/bills.")
     
-    # Load the session state at the start of the app
-    session_state = load_session_state()
-
     # File upload widget
     uploaded_file = st.file_uploader("Upload an invoice PDF", type=["pdf"])
 
     if uploaded_file:
-        session_state["uploaded_file"] = uploaded_file
-        save_session_state(session_state)
-        st.write(f"Uploaded file: {uploaded_file.name}")
-
-    # Access the file from the session state
-    if "uploaded_file" in session_state:
-        uploaded_file = session_state["uploaded_file"]
-        st.write(f"Stored file name from session: {uploaded_file.name}")
+        # Analyze the uploaded document
         invoice_data = analyze_invoice(uploaded_file)
         
+        # Display extracted data in a table format
         if invoice_data:
-            invoice_df = pd.DataFrame(invoice_data)
             st.subheader("Extracted Data")
+            invoice_df = pd.DataFrame(invoice_data)
             st.dataframe(invoice_df)  # Display the invoice data in a table
         else:
             st.write("No relevant invoice data found.")
