@@ -8,3 +8,4 @@ altair
 streamlit-aggrid
 numpy==1.26.2
 openpyxl
+azure-ai-formrecognizer==3.0.0
