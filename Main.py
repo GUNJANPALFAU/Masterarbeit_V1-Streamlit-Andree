@@ -155,6 +155,6 @@ elif selected_menu == 'Reset':
 elif selected_menu == 'Ergebnisse':
     import pages.Ergebnisse as Ergebnisse_page
     Ergebnisse_page.display_page()
-elif selected_menu == 'Materialextraction':
+elif selected_menu == 'AI':
     import pages.Materailextraction as Materialextraction_page
     Materialextraction_page.display_page()
