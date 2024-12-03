@@ -10,7 +10,7 @@ key = "DNjmy8Ljo0XverRQ9e1a9vu104RcZ5mAegO0B3jwN7PxFKY6mkblJQQJ99AKACPV0roXJ3w3A
 # Initialize the client
 client = DocumentAnalysisClient(endpoint=endpoint, credential=AzureKeyCredential(key))
 
-def analyze_invoice(document):
+def analyze_invoice(document): 
     """Analyze the invoice document and extract relevant information"""
     poller = client.begin_analyze_document("prebuilt-invoice", document)
     result = poller.result()
@@ -26,21 +26,29 @@ def analyze_invoice(document):
     # Prepare data for display
     invoice_data = []
     for row_index, row in rows.items():
-        quantity = row.get(0, "")  # Column 0 for quantity
-        description = row.get(1, "")  # Column 1 for description
-        amount = row.get(3, "")  # Column 3 for total amount
+        # Extract relevant columns for quantity, description, and amount
+        quantity = row.get(0, "").strip()  # Column 0 for quantity
+        description = row.get(1, "").strip()  # Column 1 for description
+        amount = row.get(3, "").strip()  # Column 3 for total amount
 
-        if row_index == 0:  # Skip header row
+        # Skip header row
+        if row_index == 0:  
             continue
 
-        # Skip subtotal, sales tax, etc.
+        # Skip irrelevant rows (subtotal, sales tax, shipping & handling, total due)
         if description.lower() in ["subtotal", "sales tax", "shipping & handling", "total due"]:
             continue
+
+        # Ensure 'amount' is a valid number before adding to data
+        try:
+            amount = float(amount.replace(",", "").replace("$", ""))  # Clean and convert amount to float
+        except ValueError:
+            amount = None  # If invalid, set as None
 
         # Filter out rows where all fields are empty
         if description or quantity or amount:
             invoice_data.append({"Description": description, "Quantity": quantity, "Amount": amount})
-    
+
     return invoice_data
 
 def display_page():
