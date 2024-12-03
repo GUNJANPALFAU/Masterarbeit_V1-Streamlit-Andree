@@ -11,7 +11,8 @@ key = "DNjmy8Ljo0XverRQ9e1a9vu104RcZ5mAegO0B3jwN7PxFKY6mkblJQQJ99AKACPV0roXJ3w3A
 
 # Initialize the client
 client = DocumentAnalysisClient(endpoint=endpoint, credential=AzureKeyCredential(key))
-
+poller = client.begin_analyze_document("prebuilt-invoice", uploaded_file)
+result = poller.result()
 
 SESSION_STATE_PATH = "session_state.pkl"
 
