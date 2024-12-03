@@ -62,6 +62,7 @@ menu_data = [
     {'id': 'Übersicht', 'label': "Übersicht", 'icon': "fas fa-info-circle"},
     {'id': 'Reset', 'label': "Reset", 'icon': "fa fa-sync"},
     {'id': 'Ergebnisse', 'label': "Ausleitung", 'icon': "fa fa-share"}
+    {'id': 'Materailextraction', 'label': 'Materailextraction','icon': "fa-cogs"}
 ]
 
 # Erstellen der Navigationsleiste
