@@ -56,20 +56,22 @@ def display_page():
     st.title("Data extraction")
     st.write(" Information from the invoice/bills.")
     
-    # File upload widget
     uploaded_file = st.file_uploader("Upload an invoice PDF", type=["pdf"])
-    
+
     if uploaded_file:
         # Analyze the uploaded document
-        invoice_data = analyze_invoice(uploaded_file)
-
-        # Display extracted data in a table format
-        if invoice_data:
-            st.subheader("Extracted  Data")
-            invoice_df = pd.DataFrame(invoice_data)
-            st.dataframe(invoice_df)  # Display the invoice data in a table
-        else:
-            st.write("No relevant invoice data found.")
-
+        try:
+            invoice_data = analyze_invoice(uploaded_file)
+            
+            if invoice_data:
+                # Create DataFrame only if there's valid data
+                invoice_df = pd.DataFrame(invoice_data)
+                st.subheader("Extracted Data")
+                st.dataframe(invoice_df)  # Display the invoice data in a table
+            else:
+                st.write("No relevant invoice data found.")
+        except Exception as e:
+            st.error(f"Error processing the invoice: {e}")
+            st.write("Ensure the document is a valid invoice PDF.")
     else:
         st.write("Please upload a PDF invoice file for analysis.")
