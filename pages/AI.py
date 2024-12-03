@@ -1,3 +1,4 @@
+import pickle
 import os
 import streamlit as st
 from azure.ai.formrecognizer import DocumentAnalysisClient
@@ -51,26 +52,46 @@ def analyze_invoice(document):
 
     return invoice_data
 
+def load_session_state():
+    """Load session state from a Pickle file."""
+    try:
+        with open(SESSION_STATE_PATH, "rb") as f:
+            return pickle.load(f)
+    except FileNotFoundError:
+        return {}
+
+def save_session_state(state):
+    """Save session state to a Pickle file."""
+    with open(SESSION_STATE_PATH, "wb") as f:
+        pickle.dump(state, f)
+
 def display_page():
     """Streamlit page for invoice extraction"""
     st.title("Data extraction")
-    st.write(" Information from the invoice/bills.")
+    st.write("Information from the invoice/bills.")
     
+    # Load the session state at the start of the app
+    session_state = load_session_state()
+
+    # File upload widget
     uploaded_file = st.file_uploader("Upload an invoice PDF", type=["pdf"])
 
-    if uploaded_file is not None:  # Explicit check for None
-        try:
-            st.write(f"Uploaded file name: {uploaded_file.name}")  # Debugging: show file name
-            invoice_data = analyze_invoice(uploaded_file)
-            
-            if invoice_data:
-                invoice_df = pd.DataFrame(invoice_data)
-                st.subheader("Extracted Data")
-                st.dataframe(invoice_df)  # Display the invoice data in a table
-            else:
-                st.write("No relevant invoice data found.")
-        except Exception as e:
-            st.error(f"Error processing the invoice: {e}")
-            st.write("Ensure the document is a valid invoice PDF.")
+    if uploaded_file:
+        session_state["uploaded_file"] = uploaded_file
+        save_session_state(session_state)
+        st.write(f"Uploaded file: {uploaded_file.name}")
+
+    # Access the file from the session state
+    if "uploaded_file" in session_state:
+        uploaded_file = session_state["uploaded_file"]
+        st.write(f"Stored file name from session: {uploaded_file.name}")
+        invoice_data = analyze_invoice(uploaded_file)
+        
+        if invoice_data:
+            invoice_df = pd.DataFrame(invoice_data)
+            st.subheader("Extracted Data")
+            st.dataframe(invoice_df)  # Display the invoice data in a table
+        else:
+            st.write("No relevant invoice data found.")
     else:
         st.write("Please upload a PDF invoice file for analysis.")
