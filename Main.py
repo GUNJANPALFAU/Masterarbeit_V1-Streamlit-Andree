@@ -62,7 +62,7 @@ menu_data = [
     {'id': 'Übersicht', 'label': "Übersicht", 'icon': "fas fa-info-circle"},
     {'id': 'Reset', 'label': "Reset", 'icon': "fa fa-sync"},
     {'id': 'Ergebnisse', 'label': "Ausleitung", 'icon': "fa fa-share"},
-    {'id': 'Materailextraction', 'label': "AI",'icon': "fas fa-cogs"}
+    {'id': 'AI', 'label': "AI",'icon': "fas fa-cogs"}
 ]
 
 # Erstellen der Navigationsleiste
@@ -156,5 +156,5 @@ elif selected_menu == 'Ergebnisse':
     import pages.Ergebnisse as Ergebnisse_page
     Ergebnisse_page.display_page()
 elif selected_menu == 'AI':
-    import pages.Materailextraction as Materialextraction_page
-    Materialextraction_page.display_page()
+    import pages.AI as AI_page
+    AI_page.display_page()
