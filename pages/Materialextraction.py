@@ -43,7 +43,7 @@ def analyze_invoice(document):
     
     return invoice_data
 
-def display_invoice():
+def display_page():
     st.title("Invoice Analyzer")
 
     # File uploader to upload the invoice document
@@ -68,5 +68,5 @@ def display_invoice():
                 st.write("No valid data found in the document.")
 
 # Streamlit app execution
-if __name__ == "__main__":
-    display_invoice()
+#if __name__ == "__main__":
+    #display_invoice()
