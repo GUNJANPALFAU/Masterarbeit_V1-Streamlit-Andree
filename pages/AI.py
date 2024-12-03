@@ -58,13 +58,12 @@ def display_page():
     
     uploaded_file = st.file_uploader("Upload an invoice PDF", type=["pdf"])
 
-    if uploaded_file:
-        # Analyze the uploaded document
+    if uploaded_file is not None:  # Explicit check for None
         try:
+            st.write(f"Uploaded file name: {uploaded_file.name}")  # Debugging: show file name
             invoice_data = analyze_invoice(uploaded_file)
             
             if invoice_data:
-                # Create DataFrame only if there's valid data
                 invoice_df = pd.DataFrame(invoice_data)
                 st.subheader("Extracted Data")
                 st.dataframe(invoice_df)  # Display the invoice data in a table
