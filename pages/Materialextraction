@@ -1,0 +1,65 @@
+import streamlit as st
+import pandas as pd
+import pickle
+import os
+
+from azure.ai.formrecognizer import DocumentAnalysisClient
+from azure.core.credentials import AzureKeyCredential
+
+# Azure Form Recognizer endpoint and API key
+endpoint = "https://sustainability-fau.cognitiveservices.azure.com/"
+key = "DNjmy8Ljo0XverRQ9e1a9vu104RcZ5mAegO0B3jwN7PxFKY6mkblJQQJ99AKACPV0roXJ3w3AAALACOGE42s"
+
+# Initialize the client
+client = DocumentAnalysisClient(endpoint=endpoint, credential=AzureKeyCredential(key))
+
+# Streamlit webpage setup
+st.title("Invoice Data Extractor")
+st.write("Upload an invoice PDF to extract item details.")
+
+# Upload file button
+uploaded_file = st.file_uploader("Choose an invoice file", type=["pdf"])
+
+if uploaded_file is not None:
+    # Analyze the uploaded document
+    with st.spinner("Analyzing document..."):
+        # Read the document
+        poller = client.begin_analyze_document("prebuilt-invoice", uploaded_file)
+        result = poller.result()
+
+        # Extract and process rows
+        extracted_data = []
+        for table in result.tables:
+            rows = {}
+            for cell in table.cells:
+                if cell.row_index not in rows:
+                    rows[cell.row_index] = {}
+                rows[cell.row_index][cell.column_index] = cell.content
+
+            # Process each row
+            for row_index, row in rows.items():
+                quantity = row.get(0, "")  # Column 0 for quantity
+                description = row.get(1, "")  # Column 1 for description
+                amount = row.get(3, "")  # Column 3 for total amount
+
+                if row_index == 0:  # Skip header row
+                    continue
+
+                # Skip subtotal, sales tax, etc.
+                if description.lower() in ["subtotal", "sales tax", "shipping & handling", "total due"]:
+                    continue
+
+                # Filter out rows where all fields are empty
+                if description or quantity or amount:  # Print only if at least one field is non-empty
+                    extracted_data.append({
+                        "Description": description,
+                        "Quantity": quantity,
+                        "Amount": amount
+                    })
+
+        if extracted_data:
+            # Display extracted data in a table format
+            st.write("Extracted Invoice Data:")
+            st.table(extracted_data)
+        else:
+            st.write("No valid data found in the document.")
