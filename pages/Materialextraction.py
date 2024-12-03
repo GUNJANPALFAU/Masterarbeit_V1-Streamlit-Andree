@@ -67,6 +67,3 @@ def display_page():
             else:
                 st.write("No valid data found in the document.")
 
-Streamlit app execution
-if __name__ == "__main__":
-    display_page()
