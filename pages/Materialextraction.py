@@ -11,7 +11,7 @@ key = "DNjmy8Ljo0XverRQ9e1a9vu104RcZ5mAegO0B3jwN7PxFKY6mkblJQQJ99AKACPV0roXJ3w3A
 client = DocumentAnalysisClient(endpoint=endpoint, credential=AzureKeyCredential(key))
 
 def analyze_invoice(document):
-    # Analyze the document
+    """Analyze the invoice document and extract relevant information"""
     poller = client.begin_analyze_document("prebuilt-invoice", document)
     result = poller.result()
 
@@ -44,26 +44,27 @@ def analyze_invoice(document):
     return invoice_data
 
 def display_page():
-    st.title("Invoice Analyzer")
+    """Streamlit page for invoice extraction"""
+    st.title("Material Extraction - AI Page")
+    st.write("This page displays the invoice extraction details.")
+    
+    # File upload widget
+    uploaded_file = st.file_uploader("Upload an invoice PDF", type=["pdf"])
+    
+    if uploaded_file:
+        # Analyze the uploaded document
+        invoice_data = analyze_invoice(uploaded_file)
 
-    # File uploader to upload the invoice document
-    uploaded_file = st.file_uploader("Upload Invoice PDF", type="pdf")
+        # Display extracted data in a table format
+        if invoice_data:
+            st.subheader("Extracted Invoice Data")
+            invoice_df = pd.DataFrame(invoice_data)
+            st.dataframe(invoice_df)  # Display the invoice data in a table
+        else:
+            st.write("No relevant invoice data found.")
 
-    if uploaded_file is not None:
-        # Display the uploaded file name
-        st.write(f"File uploaded: {uploaded_file.name}")
+    else:
+        st.write("Please upload a PDF invoice file for analysis.")
 
-        # Analyze the document when button is clicked
-        if st.button("Analyze Invoice"):
-            # Call the function to analyze the invoice
-            document = uploaded_file.getvalue()
-            invoice_data = analyze_invoice(document)
 
-            if invoice_data:
-                # Display the extracted data in a table format
-                st.write("### Extracted Invoice Data")
-                df = pd.DataFrame(invoice_data)
-                st.dataframe(df)  # Display as a dataframe
-            else:
-                st.write("No valid data found in the document.")
 
