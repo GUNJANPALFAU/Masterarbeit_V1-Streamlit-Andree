@@ -65,6 +65,3 @@ def display_page():
 
     else:
         st.write("Please upload a PDF invoice file for analysis.")
-
-
-
