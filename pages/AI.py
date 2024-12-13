@@ -3,6 +3,7 @@ import pickle
 import os
 import streamlit as st
 from io import BytesIO
+import pdfplumber
 from azure.ai.formrecognizer import DocumentAnalysisClient
 from azure.core.credentials import AzureKeyCredential
 
@@ -108,11 +109,13 @@ def display_page():
 
         # Process each uploaded file
         for uploaded_file in uploaded_files:
-            # Analyze the uploaded document (use your custom logic here)
+            # Analyze the uploaded document
             invoice_data = analyze_invoice(uploaded_file)
             
             # Add extracted data to the results list
             if invoice_data:
+                st.write(f"Data extracted from {uploaded_file.name}:")
+                st.write(invoice_data)
                 all_invoice_data.extend(invoice_data)
             else:
                 st.write(f"No relevant data found in {uploaded_file.name}.")
@@ -124,22 +127,14 @@ def display_page():
             st.dataframe(invoice_df)  # Display the combined invoice data in a table
         else:
             st.write("No relevant invoice data found in the uploaded files.")
-    
     else:
         st.write("Please upload one or more PDF invoice files for analysis.")
-    
+
     # Example of saving session state after analyzing
     session_state = load_session_state()
     session_state['last_uploaded_files'] = [file.name for file in uploaded_files] if uploaded_files else None
     save_session_state(session_state)
 
-# You would also need these helper functions to manage session state:
-def load_session_state():
-    """Load session state"""
-    if 'session_state' not in st.session_state:
-        st.session_state['session_state'] = {}
-    return st.session_state['session_state']
-
-def save_session_state(session_state):
-    """Save session state"""
-    st.session_state['session_state'] = session_state
+# Make sure you call the display_page function in your main app
+if __name__ == "__main__":
+    display_page()
