@@ -33,26 +33,48 @@ def analyze_invoice(document):
     result = poller.result()
 
     rows = {}
+    headers = {}
+
     # Process and extract table rows
     for table in result.tables:
         for cell in table.cells:
+            if cell.row_index == 0:  # First row as header
+                headers[cell.column_index] = cell.content.lower().strip()
             if cell.row_index not in rows:
                 rows[cell.row_index] = {}
             rows[cell.row_index][cell.column_index] = cell.content
 
+    # Dynamically map columns to "Quantity", "Description", "Amount"
+    column_map = {
+        "quantity": None,
+        "description": None,
+        "amount": None
+    }
+
+    for col_index, header in headers.items():
+        if "quantity" in header:
+            column_map["quantity"] = col_index
+        elif "description" in header:
+            column_map["description"] = col_index
+        elif "amount" in header or "total" in header:
+            column_map["amount"] = col_index
+
+    # Validate that required columns are identified
+    if not all(column_map.values()):
+        raise ValueError("Unable to map required columns from the invoice table headers.")
+
     # Prepare data for display
     invoice_data = []
     for row_index, row in rows.items():
-        # Extract relevant columns for quantity, description, and amount
-        quantity = row.get(0, "").strip()  # Column 0 for quantity
-        description = row.get(1, "").strip()  # Column 1 for description
-        amount = row.get(3, "").strip()  # Column 3 for total amount
-
-        # Skip header row
-        if row_index == 0:  
+        if row_index == 0:  # Skip header row
             continue
 
-        # Skip irrelevant rows (subtotal, sales tax, shipping & handling, total due)
+        # Extract values based on dynamic column mapping
+        quantity = row.get(column_map["quantity"], "").strip()
+        description = row.get(column_map["description"], "").strip()
+        amount = row.get(column_map["amount"], "").strip()
+
+        # Skip irrelevant rows (subtotal, sales tax, etc.)
         if description.lower() in ["subtotal", "sales tax", "shipping & handling", "total due"]:
             continue
 
@@ -70,7 +92,6 @@ def analyze_invoice(document):
             invoice_data.append({"Description": description, "Quantity": quantity, "Amount": amount})
 
     return invoice_data
-
 def display_page():
     """Streamlit page for invoice extraction"""
     st.title("Data extraction")
