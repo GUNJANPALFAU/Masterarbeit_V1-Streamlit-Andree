@@ -2,6 +2,7 @@ import pandas as pd
 import pickle
 import os
 import streamlit as st
+from io import BytesIO
 from azure.ai.formrecognizer import DocumentAnalysisClient
 from azure.core.credentials import AzureKeyCredential
 
@@ -107,7 +108,7 @@ def display_page():
 
         # Process each uploaded file
         for uploaded_file in uploaded_files:
-            # Analyze the uploaded document
+            # Analyze the uploaded document (use your custom logic here)
             invoice_data = analyze_invoice(uploaded_file)
             
             # Add extracted data to the results list
@@ -123,11 +124,22 @@ def display_page():
             st.dataframe(invoice_df)  # Display the combined invoice data in a table
         else:
             st.write("No relevant invoice data found in the uploaded files.")
-
+    
     else:
         st.write("Please upload one or more PDF invoice files for analysis.")
-
+    
     # Example of saving session state after analyzing
     session_state = load_session_state()
     session_state['last_uploaded_files'] = [file.name for file in uploaded_files] if uploaded_files else None
     save_session_state(session_state)
+
+# You would also need these helper functions to manage session state:
+def load_session_state():
+    """Load session state"""
+    if 'session_state' not in st.session_state:
+        st.session_state['session_state'] = {}
+    return st.session_state['session_state']
+
+def save_session_state(session_state):
+    """Save session state"""
+    st.session_state['session_state'] = session_state
