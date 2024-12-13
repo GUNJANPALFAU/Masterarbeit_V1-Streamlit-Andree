@@ -92,6 +92,7 @@ def analyze_invoice(document):
             invoice_data.append({"Description": description, "Quantity": quantity, "Amount": amount})
 
     return invoice_data
+
 def display_page():
     """Streamlit page for invoice extraction"""
     st.title("Data extraction")
