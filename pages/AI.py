@@ -29,9 +29,9 @@ def save_session_state(state):
     with open(SESSION_STATE_PATH, "wb") as f:
         pickle.dump(state, f)
 
-def analyze_invoice(document): 
+def analyze_invoice(document_bytes): 
     """Analyze the invoice document and extract relevant information"""
-    poller = client.begin_analyze_document("prebuilt-invoice", document)
+    poller = client.begin_analyze_document("prebuilt-invoice", document=document_bytes)
     result = poller.result()
 
     rows = {}
