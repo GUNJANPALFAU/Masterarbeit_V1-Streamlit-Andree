@@ -96,29 +96,35 @@ def analyze_invoice(document):
     return invoice_data
 
 def display_page():
-    """Streamlit page for invoice extraction"""
-    st.title("Data extraction")
+    """Streamlit page for invoice extraction."""
+    st.title("Data Extraction")
     st.write("Information from the invoice/bills.")
     
     # File upload widget (allow multiple files)
     uploaded_files = st.file_uploader("Upload invoice PDFs", type=["pdf"], accept_multiple_files=True)
 
-    if uploaded_files:
+    if uploaded_files:  # Ensure files are uploaded
         # Initialize an empty list to store the results for all files
         all_invoice_data = []
 
         # Process each uploaded file
         for uploaded_file in uploaded_files:
-            # Analyze the uploaded document
-            invoice_data = analyze_invoice(uploaded_file)
-            
-            # Add extracted data to the results list
-            if invoice_data:
-                st.write(f"Data extracted from {uploaded_file.name}:")
-                st.write(invoice_data)
-                all_invoice_data.extend(invoice_data)
-            else:
-                st.write(f"No relevant data found in {uploaded_file.name}.")
+            try:
+                # Convert the uploaded file to a byte stream
+                file_bytes = uploaded_file.read()
+                
+                # Analyze the uploaded document
+                invoice_data = analyze_invoice(file_bytes)
+                
+                # Add extracted data to the results list
+                if invoice_data:
+                    st.write(f"Data extracted from {uploaded_file.name}:")
+                    st.write(invoice_data)
+                    all_invoice_data.extend(invoice_data)
+                else:
+                    st.warning(f"No relevant data found in {uploaded_file.name}.")
+            except Exception as e:
+                st.error(f"An error occurred while processing {uploaded_file.name}: {e}")
 
         # Display extracted data for all files
         if all_invoice_data:
@@ -128,13 +134,4 @@ def display_page():
         else:
             st.write("No relevant invoice data found in the uploaded files.")
     else:
-        st.write("Please upload one or more PDF invoice files for analysis.")
-
-    # Example of saving session state after analyzing
-    session_state = load_session_state()
-    session_state['last_uploaded_files'] = [file.name for file in uploaded_files] if uploaded_files else None
-    save_session_state(session_state)
-
-# Make sure you call the display_page function in your main app
-if __name__ == "__main__":
-    display_page()
+        st.info("Please upload one or more PDF invoice files for analysis.")
