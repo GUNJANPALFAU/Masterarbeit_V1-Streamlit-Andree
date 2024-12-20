@@ -2,8 +2,6 @@ import pandas as pd
 import pickle
 import os
 import streamlit as st
-from io import BytesIO
-import pdfplumber
 from azure.ai.formrecognizer import DocumentAnalysisClient
 from azure.core.credentials import AzureKeyCredential
 
@@ -29,9 +27,9 @@ def save_session_state(state):
     with open(SESSION_STATE_PATH, "wb") as f:
         pickle.dump(state, f)
 
-def analyze_invoice(document_bytes): 
+def analyze_invoice(document): 
     """Analyze the invoice document and extract relevant information"""
-    poller = client.begin_analyze_document("prebuilt-invoice", document=document_bytes)
+    poller = client.begin_analyze_document("prebuilt-invoice", document)
     result = poller.result()
 
     rows = {}
@@ -94,44 +92,29 @@ def analyze_invoice(document_bytes):
             invoice_data.append({"Description": description, "Quantity": quantity, "Amount": amount})
 
     return invoice_data
-
 def display_page():
-    """Streamlit page for invoice extraction."""
-    st.title("Data Extraction")
+    """Streamlit page for invoice extraction"""
+    st.title("Data extraction")
     st.write("Information from the invoice/bills.")
     
-    # File upload widget (allow multiple files)
-    uploaded_files = st.file_uploader("Upload invoice PDFs", type=["pdf"], accept_multiple_files=True)
+    # File upload widget
+    uploaded_file = st.file_uploader("Upload an invoice PDF", type=["pdf"])
 
-    if uploaded_files:  # Ensure files are uploaded
-        # Initialize an empty list to store the results for all files
-        all_invoice_data = []
-
-        # Process each uploaded file
-        for uploaded_file in uploaded_files:
-            try:
-                # Convert the uploaded file to a byte stream
-                file_bytes = uploaded_file.read()
-                
-                # Analyze the uploaded document
-                invoice_data = analyze_invoice(file_bytes)
-                
-                # Add extracted data to the results list
-                if invoice_data:
-                    st.write(f"Data extracted from {uploaded_file.name}:")
-                    st.write(invoice_data)
-                    all_invoice_data.extend(invoice_data)
-                else:
-                    st.warning(f"No relevant data found in {uploaded_file.name}.")
-            except Exception as e:
-                st.error(f"An error occurred while processing {uploaded_file.name}: {e}")
-
-        # Display extracted data for all files
-        if all_invoice_data:
-            st.subheader("Extracted Data from All Invoices")
-            invoice_df = pd.DataFrame(all_invoice_data)
-            st.dataframe(invoice_df)  # Display the combined invoice data in a table
+    if uploaded_file:
+        # Analyze the uploaded document
+        invoice_data = analyze_invoice(uploaded_file)
+        
+        # Display extracted data in a table format
+        if invoice_data:
+            st.subheader("Extracted Data")
+            invoice_df = pd.DataFrame(invoice_data)
+            st.dataframe(invoice_df)  # Display the invoice data in a table
         else:
-            st.write("No relevant invoice data found in the uploaded files.")
+            st.write("No relevant invoice data found.")
     else:
-        st.info("Please upload one or more PDF invoice files for analysis.")
+        st.write("Please upload a PDF invoice file for analysis.")
+
+    # Example of saving session state after analyzing
+    session_state = load_session_state()
+    session_state['last_uploaded_file'] = uploaded_file.name if uploaded_file else None
+    save_session_state(session_state)
