@@ -96,7 +96,7 @@ def display_page():
     """Streamlit page for invoice extraction"""
     st.title("Data Extraction")
     st.write("Information from the invoices/bills.")
-
+    st.write(f"Streamlit version: {st.__version__}")
     # File upload widget for multiple files
     uploaded_files = st.file_uploader("Upload invoice PDFs", type=["pdf"], accept_multiple_files=True)
     st.write(f"Streamlit version: {st.__version__}")
