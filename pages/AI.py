@@ -99,7 +99,7 @@ def display_page():
 
     # File upload widget for multiple files
     uploaded_files = st.file_uploader("Upload invoice PDFs", type=["pdf"], accept_multiple_files=True)
-
+    st.write(f"Streamlit version: {st.__version__}")
     if uploaded_files:
         # Ensure `uploaded_files` is a list
         if not isinstance(uploaded_files, list):
