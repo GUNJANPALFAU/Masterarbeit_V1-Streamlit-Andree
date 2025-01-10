@@ -101,9 +101,14 @@ def display_page():
     uploaded_files = st.file_uploader("Upload invoice PDFs", type=["pdf"], accept_multiple_files=True)
 
     if uploaded_files:
+        # Ensure `uploaded_files` is a list
+        if not isinstance(uploaded_files, list):
+            uploaded_files = [uploaded_files]
+
         all_invoice_data = []
 
         for uploaded_file in uploaded_files:
+            st.write(f"Processing file: {uploaded_file.name}")
             # Analyze each uploaded document
             invoice_data = analyze_invoice(uploaded_file)
 
@@ -111,7 +116,7 @@ def display_page():
                 # Add extracted data to the list
                 all_invoice_data.extend(invoice_data)
             else:
-                st.write(f"No relevant invoice data found in file: {uploaded_file.name}")
+                st.write(f"No relevant data found in file: {uploaded_file.name}")
 
         # Display extracted data in a table format if any data is found
         if all_invoice_data:
@@ -122,7 +127,6 @@ def display_page():
             st.write("No relevant invoice data found in the uploaded files.")
     else:
         st.write("Please upload PDF invoice files for analysis.")
-
     # Example of saving session state after analyzing
     session_state = load_session_state()
     session_state['last_uploaded_files'] = [file.name for file in uploaded_files] if uploaded_files else None
