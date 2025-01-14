@@ -1,21 +1,22 @@
-import pandas as pd
-import pickle
-import os
 import streamlit as st
+from azure.ai.formrecognizer import DocumentAnalysisClient
+from azure.core.credentials import AzureKeyCredential
 import pytesseract
 import platform
 from PIL import Image
 from pdf2image import convert_from_path
-
 # Dynamically set Tesseract path for Streamlit Cloud
 if platform.system() == "Linux":
     pytesseract.pytesseract.tesseract_cmd = "/usr/bin/tesseract"
-else:
-    pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
+# Azure Form Recognizer endpoint and API key
+endpoint = "https://sustainability-fau.cognitiveservices.azure.com/"
+key = "DNjmy8Ljo0XverRQ9e1a9vu104RcZ5mAegO0B3jwN7PxFKY6mkblJQQJ99AKACPV0roXJ3w3AAALACOGE42s"
+
+# Initialize the client
+client = DocumentAnalysisClient(endpoint=endpoint, credential=AzureKeyCredential(key))
 
 SESSION_STATE_PATH = "session_state.pkl"
 
-# Session state functions
 def load_session_state():
     """Load session state from a Pickle file."""
     try:
@@ -29,106 +30,107 @@ def save_session_state(state):
     with open(SESSION_STATE_PATH, "wb") as f:
         pickle.dump(state, f)
 
-# Function to process and extract text
-def process_files(uploaded_files):
-    """
-    Processes uploaded image or PDF files, extracts text, and returns the results.
+def analyze_invoice(document): 
+    """Analyze the invoice document and extract relevant information"""
+    poller = client.begin_analyze_document("prebuilt-invoice", document)
+    result = poller.result()
 
-    Args:
-        uploaded_files (list): List of uploaded files from Streamlit.
+    rows = {}
+    headers = {}
 
-    Returns:
-        dict: Dictionary mapping filenames to extracted text.
-    """
-    results = {}
+    # Process and extract table rows
+    for table in result.tables:
+        for cell in table.cells:
+            if cell.row_index == 0:  # First row as header
+                headers[cell.column_index] = cell.content.lower().strip()
+            if cell.row_index not in rows:
+                rows[cell.row_index] = {}
+            rows[cell.row_index][cell.column_index] = cell.content
 
-    for uploaded_file in uploaded_files:
-        file_name, file_ext = os.path.splitext(uploaded_file.name)
+    # Dynamically map columns to "Quantity", "Description", "Amount"
+    column_map = {
+        "quantity": None,
+        "description": None,
+        "amount": None
+    }
 
-        # Process image files
-        if file_ext.lower() in ['.png', '.jpg', '.jpeg', '.bmp', '.tiff']:
+    for col_index, header in headers.items():
+        if "quantity" in header:
+            column_map["quantity"] = col_index
+        elif "description" in header:
+            column_map["description"] = col_index
+        elif "amount" in header or "total" in header:
+            column_map["amount"] = col_index
+
+    # Validate that required columns are identified
+    if not all(column_map.values()):
+        raise ValueError("Unable to map required columns from the invoice table headers.")
+
+    # Prepare data for display
+    invoice_data = []
+    for row_index, row in rows.items():
+        if row_index == 0:  # Skip header row
+            continue
+
+        # Extract values based on dynamic column mapping
+        quantity = row.get(column_map["quantity"], "").strip()
+        description = row.get(column_map["description"], "").strip()
+        amount = row.get(column_map["amount"], "").strip()
+
+        # Skip irrelevant rows (subtotal, sales tax, etc.)
+        if description.lower() in ["subtotal", "sales tax", "shipping & handling", "total due"]:
+            continue
+
+        # Ensure 'amount' is a valid number before adding to data
+        if amount:  # Check if amount is not empty or None
             try:
-                image = Image.open(uploaded_file)
-                text = pytesseract.image_to_string(image)
-                results[file_name] = text
-            except Exception as e:
-                results[file_name] = f"Error processing image: {e}"
-
-        # Process PDF files
-        elif file_ext.lower() == '.pdf':
-            try:
-                images = convert_from_path(uploaded_file)
-                pdf_text = ""
-                for i, image in enumerate(images):
-                    page_text = pytesseract.image_to_string(image)
-                    pdf_text += f"--- Page {i + 1} ---\n{page_text}\n"
-                results[file_name] = pdf_text
-            except Exception as e:
-                results[file_name] = f"Error processing PDF: {e}"
-
+                amount = float(amount.replace(",", "").replace("$", ""))  # Clean and convert amount to float
+            except ValueError:
+                amount = None  # If invalid, set as None
         else:
-            results[file_name] = "Unsupported file format."
+            amount = None  # If amount is empty or None, set as None
 
-    return results
+        # Filter out rows where all fields are empty
+        if description or quantity or amount:
+            invoice_data.append({"Description": description, "Quantity": quantity, "Amount": amount})
 
-
-# Streamlit display page function
+    return invoice_data
 def display_page():
-    """Streamlit page for document text extraction."""
-    # Initialize session state
-    if "extracted_texts" not in st.session_state:
-        st.session_state["extracted_texts"] = {}
-
-    st.title("Document Text Extraction App")
-    st.write("Upload invoices or bills (PDFs or images) to extract information.")
-
-    # File upload widget
-    uploaded_files = st.file_uploader(
-        "Upload files (Images or PDFs)", 
-        type=["png", "jpg", "jpeg", "bmp", "tiff", "pdf"], 
-        accept_multiple_files=True
-    )
-
+    """Streamlit page for invoice extraction"""
+    st.title("Data Extraction")
+    st.write("Information from the invoices/bills.")
+    st.write(f"Streamlit version: {st.__version__}")
+    # File upload widget for multiple files
+    uploaded_files = st.file_uploader("Upload invoice PDFs", type=["pdf"], accept_multiple_files=True)
+    st.write(f"Streamlit version: {st.__version__}")
     if uploaded_files:
-        st.info(f"{len(uploaded_files)} files uploaded. Processing...")
+        # Ensure `uploaded_files` is a list
+        if not isinstance(uploaded_files, list):
+            uploaded_files = [uploaded_files]
 
-        # Process files and store in session state
-        with st.spinner("Extracting text from uploaded files..."):
-            extracted_texts = process_files(uploaded_files)
-            st.session_state["extracted_texts"].update(extracted_texts)
+        all_invoice_data = []
 
-        st.success("Text extraction complete!")
+        for uploaded_file in uploaded_files:
+            st.write(f"Processing file: {uploaded_file.name}")
+            # Analyze each uploaded document
+            invoice_data = analyze_invoice(uploaded_file)
 
-        # Display extracted data
-        for file_name, text in st.session_state["extracted_texts"].items():
-            st.subheader(f"Extracted Text: {file_name}")
-            st.text_area(f"Text from {file_name}", text, height=300)
+            if invoice_data:
+                # Add extracted data to the list
+                all_invoice_data.extend(invoice_data)
+            else:
+                st.write(f"No relevant data found in file: {uploaded_file.name}")
 
-            # Option to download extracted text
-            st.download_button(
-                label=f"Download Text for {file_name}",
-                data=text,
-                file_name=f"{file_name}.txt",
-                mime="text/plain"
-            )
-
-        # Save session state to disk
-        save_session_state(st.session_state["extracted_texts"])
-
-    else:
-        # Display previously extracted files, if any
-        if st.session_state["extracted_texts"]:
-            st.info("Previously extracted text from session:")
-            for file_name, text in st.session_state["extracted_texts"].items():
-                st.subheader(f"Extracted Text: {file_name}")
-                st.text_area(f"Text from {file_name}", text, height=300)
-
-                # Option to download extracted text
-                st.download_button(
-                    label=f"Download Text for {file_name}",
-                    data=text,
-                    file_name=f"{file_name}.txt",
-                    mime="text/plain"
-                )
+        # Display extracted data in a table format if any data is found
+        if all_invoice_data:
+            st.subheader("Extracted Data")
+            invoice_df = pd.DataFrame(all_invoice_data)
+            st.dataframe(invoice_df)  # Display the invoice data in a table
         else:
-            st.warning("Please upload files to begin text extraction.")
+            st.write("No relevant invoice data found in the uploaded files.")
+    else:
+        st.write("Please upload PDF invoice files for analysis.")
+    # Example of saving session state after analyzing
+    session_state = load_session_state()
+    session_state['last_uploaded_files'] = [file.name for file in uploaded_files] if uploaded_files else None
+    save_session_state(session_state)
