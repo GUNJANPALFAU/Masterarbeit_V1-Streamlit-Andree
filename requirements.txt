@@ -8,8 +8,6 @@ altair
 streamlit-aggrid
 numpy==1.26.2
 openpyxl
-azure-ai-formrecognizer==3.3.3
-azure-core==1.32.0
 msrest==0.7.1
 cachetools==5.5.0
 certifi==2024.8.30
