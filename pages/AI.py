@@ -2,8 +2,6 @@ import pandas as pd
 import pickle
 import os
 import streamlit as st
-#from azure.ai.formrecognizer import DocumentAnalysisClient
-#from azure.core.credentials import AzureKeyCredential
 import pytesseract
 import platform
 from PIL import Image
