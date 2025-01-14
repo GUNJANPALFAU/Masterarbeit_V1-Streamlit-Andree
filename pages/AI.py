@@ -2,8 +2,8 @@ import pandas as pd
 import pickle
 import os
 import streamlit as st
-from azure.ai.formrecognizer import DocumentAnalysisClient
-from azure.core.credentials import AzureKeyCredential
+#from azure.ai.formrecognizer import DocumentAnalysisClient
+#from azure.core.credentials import AzureKeyCredential
 import pytesseract
 import platform
 from PIL import Image
@@ -12,12 +12,7 @@ from pdf2image import convert_from_path
 # Dynamically set Tesseract path for Streamlit Cloud
 if platform.system() == "Linux":
     pytesseract.pytesseract.tesseract_cmd = "/usr/bin/tesseract"
-# Azure Form Recognizer endpoint and API key
-endpoint = "https://sustainability-fau.cognitiveservices.azure.com/"
-key = "DNjmy8Ljo0XverRQ9e1a9vu104RcZ5mAegO0B3jwN7PxFKY6mkblJQQJ99AKACPV0roXJ3w3AAALACOGE42s"
 
-# Initialize the client
-client = DocumentAnalysisClient(endpoint=endpoint, credential=AzureKeyCredential(key))
 
 SESSION_STATE_PATH = "session_state.pkl"
 
