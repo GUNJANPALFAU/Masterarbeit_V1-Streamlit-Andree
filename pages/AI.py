@@ -74,32 +74,41 @@ def process_files(uploaded_files):
             results[file_name] = "Unsupported file format."
 
     return results
-# Streamlit page setup
-st.title("Document Text Extraction App")
-st.write("Upload multiple images or PDFs to extract text.")
-
-# File upload widget
-uploaded_files = st.file_uploader(
-    "Upload your files (Images or PDFs)", 
-    type=["png", "jpg", "jpeg", "bmp", "tiff", "pdf"], 
-    accept_multiple_files=True
-)
-
-if uploaded_files:
-    # Process files and display results
-    with st.spinner("Extracting text from uploaded files..."):
-        extracted_texts = process_files(uploaded_files)
-
-    st.success("Text extraction complete!")
+def display_page():
+    """Streamlit page for document text extraction."""
+    st.title("Document Text Extraction App")
+    st.write("Upload invoices or bills (PDFs or images) to extract information.")
     
-    # Display extracted text for each file
-    for file_name, text in extracted_texts.items():
-        st.subheader(f"Extracted Text: {file_name}")
-        st.text_area(f"Text from {file_name}", text, height=300)
+    # File upload widget
+    uploaded_files = st.file_uploader(
+        "Upload files (Images or PDFs)", 
+        type=["png", "jpg", "jpeg", "bmp", "tiff", "pdf"], 
+        accept_multiple_files=True
+    )
 
-else:
-    st.info("Please upload files to begin text extraction.")
-    # Example of saving session state after analyzing
-    session_state = load_session_state()
-    session_state['last_uploaded_files'] = [file.name for file in uploaded_files] if uploaded_files else None
-    save_session_state(session_state)
+    if uploaded_files:
+        st.info(f"{len(uploaded_files)} files uploaded. Processing...")
+
+        # Process files and display results
+        with st.spinner("Extracting text from uploaded files..."):
+            extracted_texts = process_files(uploaded_files)
+
+        st.success("Text extraction complete!")
+
+        # Display extracted data
+        for file_name, text in extracted_texts.items():
+            st.subheader(f"Extracted Text: {file_name}")
+            st.text_area(f"Text from {file_name}", text, height=300)
+
+        # Option to download extracted text
+        for file_name, text in extracted_texts.items():
+            st.download_button(
+                label=f"Download Text for {file_name}",
+                data=text,
+                file_name=f"{file_name}.txt",
+                mime="text/plain"
+            )
+
+    else:
+        st.warning("Please upload files to begin text extraction.")
+
