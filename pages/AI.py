@@ -10,10 +10,12 @@ from pdf2image import convert_from_path
 # Dynamically set Tesseract path for Streamlit Cloud
 if platform.system() == "Linux":
     pytesseract.pytesseract.tesseract_cmd = "/usr/bin/tesseract"
-
+else:
+    pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
 
 SESSION_STATE_PATH = "session_state.pkl"
 
+# Session state functions
 def load_session_state():
     """Load session state from a Pickle file."""
     try:
@@ -26,12 +28,6 @@ def save_session_state(state):
     """Save session state to a Pickle file."""
     with open(SESSION_STATE_PATH, "wb") as f:
         pickle.dump(state, f)
-
-# Dynamically set Tesseract path for Streamlit Cloud
-if os.name == "posix":  # For Linux/Streamlit Cloud
-    pytesseract.pytesseract.tesseract_cmd = "/usr/bin/tesseract"
-else:  # For Windows
-    pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
 
 # Function to process and extract text
 def process_files(uploaded_files):
@@ -74,11 +70,18 @@ def process_files(uploaded_files):
             results[file_name] = "Unsupported file format."
 
     return results
+
+
+# Streamlit display page function
 def display_page():
     """Streamlit page for document text extraction."""
+    # Initialize session state
+    if "extracted_texts" not in st.session_state:
+        st.session_state["extracted_texts"] = {}
+
     st.title("Document Text Extraction App")
     st.write("Upload invoices or bills (PDFs or images) to extract information.")
-    
+
     # File upload widget
     uploaded_files = st.file_uploader(
         "Upload files (Images or PDFs)", 
@@ -89,19 +92,19 @@ def display_page():
     if uploaded_files:
         st.info(f"{len(uploaded_files)} files uploaded. Processing...")
 
-        # Process files and display results
+        # Process files and store in session state
         with st.spinner("Extracting text from uploaded files..."):
             extracted_texts = process_files(uploaded_files)
+            st.session_state["extracted_texts"].update(extracted_texts)
 
         st.success("Text extraction complete!")
 
         # Display extracted data
-        for file_name, text in extracted_texts.items():
+        for file_name, text in st.session_state["extracted_texts"].items():
             st.subheader(f"Extracted Text: {file_name}")
             st.text_area(f"Text from {file_name}", text, height=300)
 
-        # Option to download extracted text
-        for file_name, text in extracted_texts.items():
+            # Option to download extracted text
             st.download_button(
                 label=f"Download Text for {file_name}",
                 data=text,
@@ -109,6 +112,23 @@ def display_page():
                 mime="text/plain"
             )
 
-    else:
-        st.warning("Please upload files to begin text extraction.")
+        # Save session state to disk
+        save_session_state(st.session_state["extracted_texts"])
 
+    else:
+        # Display previously extracted files, if any
+        if st.session_state["extracted_texts"]:
+            st.info("Previously extracted text from session:")
+            for file_name, text in st.session_state["extracted_texts"].items():
+                st.subheader(f"Extracted Text: {file_name}")
+                st.text_area(f"Text from {file_name}", text, height=300)
+
+                # Option to download extracted text
+                st.download_button(
+                    label=f"Download Text for {file_name}",
+                    data=text,
+                    file_name=f"{file_name}.txt",
+                    mime="text/plain"
+                )
+        else:
+            st.warning("Please upload files to begin text extraction.")
