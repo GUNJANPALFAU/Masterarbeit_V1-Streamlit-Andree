@@ -6,7 +6,7 @@ import pandas as pd
 import streamlit as st
 
 # Set Tesseract executable path
-pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
+pytesseract.pytesseract.tesseract_cmd = 'tesseract'
 
 def extract_text_from_file(file_path, file_ext):
     """Extract text from a single file (image or PDF)."""
