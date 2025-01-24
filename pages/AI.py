@@ -14,6 +14,11 @@ api_key = st.secrets["ANTHROPIC_API_KEY"]
 # Initialize the Anthropic client
 client = Anthropic(api_key=api_key)
 
+api_key = st.secrets.get("ANTHROPIC_API_KEY", None)
+if not api_key:
+    st.error("API key not found in Streamlit secrets!")
+    return
+
 # Set Tesseract executable path
 import platform
 if platform.system() == "Linux":
