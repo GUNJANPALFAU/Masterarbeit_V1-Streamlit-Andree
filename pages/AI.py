@@ -43,19 +43,18 @@ def extract_text_from_file(file_path, file_ext):
 
 def analyze_sustainability(text):
     """Send text to Claude.ai for sustainability analysis."""
-    prompt = (
-        f"Analyze the following text for sustainability-related data points, "
-        f"such as energy consumption, carbon emissions, renewable resources, "
-        f"water usage, or any other sustainability-related metrics. Provide a crisp summary:\n\n"
-        f"{text}"
-    )
-    response = client.completions.create(
-        model="claude 3.5-Haiku",
-        prompt=f"{HUMAN_PROMPT} {prompt}{AI_PROMPT}",
-        max_tokens_to_sample=500,
-        temperature=0.5
-    )
-    return response.completion
+    try:
+        response = client.messages.create(
+            model="claude-3-haiku-20240307",
+            max_tokens=100,
+            messages=[
+                {"role": "user", "content": f"Analyze the following text for sustainability-related data points:\n{text}"}
+            ]
+        )
+        return response['completion']
+    except Exception as e:
+        st.error(f"Failed to analyze text with Claude.ai: {e}")
+        return None
 
 def display_page():
     st.title("Sustainability Analysis Tool")
