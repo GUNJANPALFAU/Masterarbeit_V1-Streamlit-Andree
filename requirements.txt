@@ -20,9 +20,8 @@ Pillow==10.1.0
 pdfplumber==0.11.4
 pdfminer.six==20231228
 pytesseract
-Pillow
 pdf2image
 tesseract
 requests
-anthropic>=1.2.0
+anthropic>=1.2.0; python_version >= "3.7" and python_version < "3.11"
 
