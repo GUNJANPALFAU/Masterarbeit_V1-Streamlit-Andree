@@ -5,21 +5,15 @@ import pytesseract
 from pdf2image import convert_from_path
 import pandas as pd
 import streamlit as st
-from anthropic import Anthropic, HUMAN_PROMPT, AI_PROMPT
+from anthropic import Anthropic
 
-
-# Access the API key from secrets
+# Access the API key from Streamlit secrets
 api_key = st.secrets["ANTHROPIC_API_KEY"]
 
 # Initialize the Anthropic client
 client = Anthropic(api_key=api_key)
 
-api_key = st.secrets.get("ANTHROPIC_API_KEY", None)
-if not api_key:
-    st.error("API key not found in Streamlit secrets!")
-    return
-
-# Set Tesseract executable path
+# Set Tesseract executable path dynamically
 import platform
 if platform.system() == "Linux":
     pytesseract.pytesseract.tesseract_cmd = "/usr/bin/tesseract"
@@ -50,18 +44,19 @@ def analyze_sustainability(text):
     """Send text to Claude.ai for sustainability analysis."""
     try:
         response = client.messages.create(
-            model="claude-3-haiku-20240307",
-            max_tokens=100,
+            model="claude-3-5-haiku-latest",  # Update to the correct model name
+            max_tokens=300,  # Adjust max tokens for output
             messages=[
                 {"role": "user", "content": f"Analyze the following text for sustainability-related data points:\n{text}"}
             ]
         )
-        return response['completion']
+        return response['completion']  # Adjust response handling for newer API
     except Exception as e:
-        st.error(f"Failed to analyze text with Claude.ai: {e}")
+        st.error(f"Error analyzing text with Claude.ai: {e}")
         return None
 
 def display_page():
+    """Streamlit page for sustainability analysis."""
     st.title("Sustainability Analysis Tool")
     st.write("Upload images or PDFs to extract and analyze sustainability-related information.")
 
@@ -95,7 +90,8 @@ def display_page():
                 full_text = " ".join([t["Text"] for t in text_data])
                 with st.spinner(f"Analyzing sustainability data for {uploaded_file.name}..."):
                     analysis = analyze_sustainability(full_text)
-                all_analysis_results.append({"File": uploaded_file.name, "Analysis": analysis})
+                if analysis:
+                    all_analysis_results.append({"File": uploaded_file.name, "Analysis": analysis})
             else:
                 st.write(f"No text extracted from file: {uploaded_file.name}")
 
