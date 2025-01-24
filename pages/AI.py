@@ -50,7 +50,7 @@ def analyze_sustainability(text):
         f"{text}"
     )
     response = client.completions.create(
-        model="claude-3.5-haiku",
+        model="claude 3.5-Haiku",
         prompt=f"{HUMAN_PROMPT} {prompt}{AI_PROMPT}",
         max_tokens_to_sample=500,
         temperature=0.5
