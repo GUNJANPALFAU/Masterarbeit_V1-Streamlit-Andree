@@ -10,6 +10,9 @@ from anthropic import Anthropic
 # Access the API key from Streamlit secrets
 api_key = st.secrets["ANTHROPIC_API_KEY"]
 
+if not api_key:
+    raise ValueError("API key for Anthropic is missing in secrets.toml")
+
 # Initialize the Anthropic client
 client = Anthropic(api_key=api_key)
 
