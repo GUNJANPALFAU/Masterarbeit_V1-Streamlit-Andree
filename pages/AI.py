@@ -23,21 +23,18 @@ else:
 def extract_text_from_file(file_path, file_ext):
     """Extract text from a single file (image or PDF)."""
     text_data = []
-    if file_ext.lower() in ['.png', '.jpg', '.jpeg', '.bmp', '.tiff']:
-        try:
+    try:
+        if file_ext.lower() in ['.png', '.jpg', '.jpeg', '.bmp', '.tiff']:
             image = Image.open(file_path)
             text = pytesseract.image_to_string(image)
             text_data.append({"Page": 1, "Text": text})
-        except Exception as e:
-            st.error(f"Failed to process image file {file_path}: {e}")
-    elif file_ext.lower() == '.pdf':
-        try:
+        elif file_ext.lower() == '.pdf':
             images = convert_from_path(file_path)
             for i, image in enumerate(images):
                 page_text = pytesseract.image_to_string(image)
                 text_data.append({"Page": i + 1, "Text": page_text})
-        except Exception as e:
-            st.error(f"Failed to process PDF file {file_path}: {e}")
+    except Exception as e:
+        st.error(f"Failed to process file {file_path}: {e}")
     return text_data
 
 def analyze_sustainability(text):
@@ -45,22 +42,18 @@ def analyze_sustainability(text):
     prompt = (
         f"Analyze the following text for sustainability-related data points, "
         f"such as energy consumption, carbon emissions, renewable resources, "
-        f"water usage, or any other sustainability-related metrics. Provide a crisp summary:\n\n"
-        f"{text}"
+        f"water usage, or any other sustainability-related metrics. Provide a crisp summary:\n\n{text}"
     )
     try:
         response = client.messages.create(
-            model="claude-3-5-haiku-latest",  # Ensure the latest model is used
-            max_tokens=300,  # Limit the token usage for cost efficiency
-            messages=[
-                {"role": "user", "content": prompt}
-            ]
+            model="claude-3-5-haiku-latest",  # Specify the correct model
+            max_tokens=300,  # Limit the token usage
+            messages=[{"role": "user", "content": prompt}]
         )
-        # Correctly access the generated content
-        return response["completion"] if "completion" in response else "No content generated"
+        return response.get("completion", "No content generated")  # Safely access completion
     except Exception as e:
         st.error(f"Error analyzing text with Claude.ai: {e}")
-        return None
+        return "No analysis could be performed."
 
 def display_page():
     """Streamlit page for sustainability analysis."""
@@ -97,10 +90,9 @@ def display_page():
                 full_text = " ".join([t["Text"] for t in text_data])
                 with st.spinner(f"Analyzing sustainability data for {uploaded_file.name}..."):
                     analysis = analyze_sustainability(full_text)
-                if analysis:
-                    all_analysis_results.append({"File": uploaded_file.name, "Analysis": analysis})
+                all_analysis_results.append({"File": uploaded_file.name, "Analysis": analysis})
             else:
-                st.write(f"No text extracted from file: {uploaded_file.name}")
+                st.warning(f"No text extracted from file: {uploaded_file.name}")
 
         # Display extracted text in a table format if any data is found
         if all_text_data:
@@ -115,6 +107,7 @@ def display_page():
                 st.markdown(f"### File: {result['File']}")
                 st.text_area("Analysis", result["Analysis"], height=200)
 
+        # Clean up the temporary directory
         shutil.rmtree("temp", ignore_errors=True)
     else:
         st.info("Please upload files to start processing.")
