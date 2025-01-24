@@ -24,4 +24,5 @@ Pillow
 pdf2image
 tesseract
 requests
-anthropic
+anthropic>=0.2.0
+
