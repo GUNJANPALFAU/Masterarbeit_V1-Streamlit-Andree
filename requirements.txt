@@ -23,5 +23,4 @@ pytesseract
 pdf2image
 tesseract
 requests
-anthropic>=1.2.0; python_version >= "3.7" and python_version < "3.11"
-
+anthropic>=1.2.0
