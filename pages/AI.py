@@ -42,15 +42,22 @@ def extract_text_from_file(file_path, file_ext):
 
 def analyze_sustainability(text):
     """Send text to Claude.ai for sustainability analysis."""
+    prompt = (
+        f"Analyze the following text for sustainability-related data points, "
+        f"such as energy consumption, carbon emissions, renewable resources, "
+        f"water usage, or any other sustainability-related metrics. Provide a crisp summary:\n\n"
+        f"{text}"
+    )
     try:
         response = client.messages.create(
-            model="claude-3-5-haiku-latest",  # Update to the correct model name
-            max_tokens=300,  # Adjust max tokens for output
+            model="claude-3-5-haiku-latest",  # Ensure the latest model is used
+            max_tokens=300,  # Limit the token usage for cost efficiency
             messages=[
-                {"role": "user", "content": f"Analyze the following text for sustainability-related data points:\n{text}"}
+                {"role": "user", "content": prompt}
             ]
         )
-        return response['completion']  # Adjust response handling for newer API
+        # Correctly access the generated content
+        return response["completion"] if "completion" in response else "No content generated"
     except Exception as e:
         st.error(f"Error analyzing text with Claude.ai: {e}")
         return None
