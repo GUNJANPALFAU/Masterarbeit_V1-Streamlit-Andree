@@ -23,3 +23,4 @@ pytesseract
 Pillow
 pdf2image
 tesseract
+requests
