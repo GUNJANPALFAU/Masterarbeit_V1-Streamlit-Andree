@@ -25,5 +25,6 @@ pdf2image
 tesseract
 requests
 anthropic==0.4.1
-httpx
+httpx>=0.24.0
+
 
