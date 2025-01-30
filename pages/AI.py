@@ -7,15 +7,36 @@ import pandas as pd
 import streamlit as st
 from anthropic import Anthropic
 
-# Access the API key from Streamlit secrets
-api_key = st.secrets["ANTHROPIC_API_KEY"]
+# Replace "your_api_key_here" with your actual API key
+api_key = "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"
 
 if not api_key:
-    raise ValueError("API key for Anthropic is missing in secrets.toml")
+    raise ValueError("API key for Anthropic is missing")
 
-# Initialize the Anthropic client
+# Initialize the Anthropic client with the hardcoded API key
 client = Anthropic(api_key=api_key)
 
+# Example usage
+def analyze_sustainability(text):
+    """Send text to Claude.ai for sustainability analysis."""
+    prompt = (
+        f"Analyze the following text for sustainability-related data points, "
+        f"such as energy consumption, carbon emissions, renewable resources, "
+        f"water usage, or any other sustainability-related metrics. Provide a crisp summary:\n\n{text}"
+    )
+    try:
+        response = client.messages.create(
+            model="claude-3-5-haiku-latest",  # Specify the correct model
+            max_tokens=300,  # Limit the token usage
+            messages=[{"role": "user", "content": prompt}]
+        )
+        return response.get("completion", "No content generated")  # Safely access completion
+    except Exception as e:
+        return f"Error analyzing text with Claude.ai: {e}"
+
+# Test the function
+result = analyze_sustainability("Sample text to analyze for sustainability.")
+print(result)
 # Set Tesseract executable path dynamically
 import platform
 if platform.system() == "Linux":
