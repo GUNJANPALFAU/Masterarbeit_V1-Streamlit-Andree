@@ -5,44 +5,13 @@ import pytesseract
 from pdf2image import convert_from_path
 import pandas as pd
 import streamlit as st
-from anthropic import Anthropic
 
-# Replace "your_api_key_here" with your actual API key
-api_key = "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"
-
-if not api_key:
-    raise ValueError("API key for Anthropic is missing")
-
-# Initialize the Anthropic client with the hardcoded API key
-client = Anthropic(api_key=api_key)
-
-# Example usage
-def analyze_sustainability(text):
-    """Send text to Claude.ai for sustainability analysis."""
-    prompt = (
-        f"Analyze the following text for sustainability-related data points, "
-        f"such as energy consumption, carbon emissions, renewable resources, "
-        f"water usage, or any other sustainability-related metrics. Provide a crisp summary:\n\n{text}"
-    )
-    try:
-        response = client.messages.create(
-            model="claude-3-5-haiku-latest",  # Specify the correct model
-            max_tokens=300,  # Limit the token usage
-            messages=[{"role": "user", "content": prompt}]
-        )
-        return response.get("completion", "No content generated")  # Safely access completion
-    except Exception as e:
-        return f"Error analyzing text with Claude.ai: {e}"
-
-# Test the function
-result = analyze_sustainability("Sample text to analyze for sustainability.")
-print(result)
 # Set Tesseract executable path dynamically
 import platform
 if platform.system() == "Linux":
     pytesseract.pytesseract.tesseract_cmd = "/usr/bin/tesseract"
 else:
-    pytesseract.pytesseract.tesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
+    pytesseract.pytesseract_cmd = r"C:\Program Files\Tesseract-OCR\tesseract.exe"
 
 def extract_text_from_file(file_path, file_ext):
     """Extract text from a single file (image or PDF)."""
@@ -61,28 +30,10 @@ def extract_text_from_file(file_path, file_ext):
         st.error(f"Failed to process file {file_path}: {e}")
     return text_data
 
-def analyze_sustainability(text):
-    """Send text to Claude.ai for sustainability analysis."""
-    prompt = (
-        f"Analyze the following text for sustainability-related data points, "
-        f"such as energy consumption, carbon emissions, renewable resources, "
-        f"water usage, or any other sustainability-related metrics. Provide a crisp summary:\n\n{text}"
-    )
-    try:
-        response = client.messages.create(
-            model="claude-3-5-haiku-latest",  # Specify the correct model
-            max_tokens=300,  # Limit the token usage
-            messages=[{"role": "user", "content": prompt}]
-        )
-        return response.get("completion", "No content generated")  # Safely access completion
-    except Exception as e:
-        st.error(f"Error analyzing text with Claude.ai: {e}")
-        return "No analysis could be performed."
-
 def display_page():
-    """Streamlit page for sustainability analysis."""
-    st.title("Sustainability Analysis Tool")
-    st.write("Upload images or PDFs to extract and analyze sustainability-related information.")
+    """Streamlit page for text extraction."""
+    st.title("Text Extraction Tool")
+    st.write("Upload images or PDFs to extract text using OCR.")
 
     uploaded_files = st.file_uploader(
         "Upload files (PDFs or images)", 
@@ -93,7 +44,6 @@ def display_page():
     if uploaded_files:
         os.makedirs("temp", exist_ok=True)
         all_text_data = []
-        all_analysis_results = []
 
         for uploaded_file in uploaded_files:
             st.write(f"Processing file: {uploaded_file.name}")
@@ -109,12 +59,6 @@ def display_page():
 
             if text_data:
                 all_text_data.extend([{"File": uploaded_file.name, "Page": t["Page"], "Text": t["Text"]} for t in text_data])
-
-                # Send extracted text to Claude.ai for analysis
-                full_text = " ".join([t["Text"] for t in text_data])
-                with st.spinner(f"Analyzing sustainability data for {uploaded_file.name}..."):
-                    analysis = analyze_sustainability(full_text)
-                all_analysis_results.append({"File": uploaded_file.name, "Analysis": analysis})
             else:
                 st.warning(f"No text extracted from file: {uploaded_file.name}")
 
@@ -123,13 +67,6 @@ def display_page():
             st.subheader("Extracted Text Data")
             text_df = pd.DataFrame(all_text_data)
             st.dataframe(text_df)
-
-        # Display sustainability analysis
-        if all_analysis_results:
-            st.subheader("Sustainability Analysis Results")
-            for result in all_analysis_results:
-                st.markdown(f"### File: {result['File']}")
-                st.text_area("Analysis", result["Analysis"], height=200)
 
         # Clean up the temporary directory
         shutil.rmtree("temp", ignore_errors=True)
